@@ -1,115 +1,124 @@
-# CloudCourse - iOS 课表应用
+# iOS 课表 App 开发文档
 
 ## 项目概述
 
-CloudCourse 是一款 iOS 课表应用，允许用户导入课程表，并在灵动岛（Dynamic Island）和锁屏界面显示当前课程或当天的课表信息。应用采用 SwiftUI 构建用户界面，遵循 Apple Design Guidelines，并支持深色模式。
+这是一个iOS课表应用，允许用户导入课程表，并在灵动岛（Dynamic Island）和锁屏界面显示当前课程或当天的课表信息。应用采用SwiftUI构建UI，支持深色模式，并遵循Apple设计规范。
 
-## 技术栈
+## 技术方案
 
+### 开发语言与框架
 - **编程语言**：Swift
-- **UI 框架**：SwiftUI
-- **系统集成**：Live Activities、WidgetKit
-- **最低支持系统**：iOS 16.0+（支持灵动岛需要 iPhone 14 Pro 及以上机型）
+- **UI框架**：SwiftUI
+- **扩展框架**：WidgetKit、ActivityKit (用于Live Activities)
+
+### 核心功能模块
+
+1. **课程数据模型**
+   - 课程基本信息（名称、教师、地点、时间等）
+   - 学期与周次管理
+   - 数据持久化（CoreData/UserDefaults）
+
+2. **课表导入机制**
+   - 支持多种导入方式（手动添加、文件导入、教务系统API等）
+   - 数据解析与验证
+
+3. **灵动岛集成（Dynamic Island）**
+   - 使用ActivityKit创建Live Activities
+   - 显示当前/下一节课程信息
+   - 支持紧凑型和扩展型两种显示模式
+
+4. **锁屏组件（Lock Screen Widget）**
+   - 使用WidgetKit开发锁屏小组件
+   - 提供多种尺寸的组件（小、中、大）
+   - 显示当天课程概览或当前课程详情
+
+5. **主应用功能**
+   - 课表周视图/日视图
+   - 课程管理（添加、编辑、删除）
+   - 设置与偏好
+
+### 数据流设计
+
+```
+用户输入/导入 → 数据解析 → 数据模型 → 持久化存储 ↔ 应用/组件显示
+```
 
 ## 项目结构
 
 ```
 CloudCourse/
-├── CloudCourse/                  # 主应用代码
+├── CloudCourse/                  # 主应用
 │   ├── App/                      # 应用入口
 │   ├── Models/                   # 数据模型
-│   ├── Views/                    # UI 视图
-│   │   ├── Course/              # 课程相关视图
-│   │   ├── Schedule/            # 课表相关视图
-│   │   ├── Settings/            # 设置相关视图
-│   │   └── Components/          # 可复用组件
+│   ├── Views/                    # UI视图
+│   │   ├── CourseViews/          # 课程相关视图
+│   │   ├── ImportViews/          # 导入相关视图
+│   │   └── SettingsViews/        # 设置相关视图
 │   ├── ViewModels/              # 视图模型
 │   ├── Services/                # 服务层
-│   │   ├── DataService/         # 数据服务
-│   │   ├── ImportService/       # 导入服务
-│   │   └── NotificationService/ # 通知服务
-│   ├── Utils/                   # 工具类
-│   └── Resources/               # 资源文件
-├── CloudCourseWidget/           # 小组件扩展
-├── CloudCourseLiveActivity/     # 灵动岛和锁屏活动
-└── doc/                         # 项目文档
-    ├── README.md                # 项目说明
-    ├── DevelopmentProgress.md   # 开发进度
-    └── DataDictionary.md        # 数据字典
+│   │   ├── DataService/          # 数据服务
+│   │   ├── ImportService/        # 导入服务
+│   │   └── NotificationService/  # 通知服务
+│   └── Utils/                   # 工具类
+├── CourseWidgetExtension/       # 小组件扩展
+│   ├── CourseWidget.swift        # 小组件实现
+│   └── CourseWidgetBundle.swift  # 小组件配置
+├── CourseLiveActivity/          # 灵动岛扩展
+│   ├── CourseLiveActivity.swift  # 灵动岛活动实现
+│   └── CourseActivityAttributes.swift # 活动属性定义
+└── Shared/                      # 共享代码
+    ├── Models/                   # 共享数据模型
+    └── Utils/                    # 共享工具类
 ```
 
-## 技术方案
+## UI设计建议
 
-### 1. 数据模型设计
+### 设计原则
+- 遵循Apple Human Interface Guidelines
+- 简洁直观的信息展示
+- 支持浅色/深色模式
+- 适配不同屏幕尺寸
 
-应用将使用 Core Data 作为本地数据存储方案，主要数据模型包括：
+### 主要界面
 
-- **Course**：课程信息，包含课程名称、教师、教室等
-- **Schedule**：课表信息，包含周几、开始时间、结束时间等
-- **Semester**：学期信息，用于区分不同学期的课表
+1. **课表视图**
+   - 网格式周视图，显示一周课程
+   - 日视图，显示当天详细课程
+   - 使用颜色区分不同课程类型
+   - 支持手势操作（滑动切换周次等）
 
-### 2. 课表导入方案
+2. **课程详情**
+   - 显示课程完整信息
+   - 提供快速操作（添加提醒、分享等）
 
-支持多种导入方式：
+3. **导入界面**
+   - 步骤引导式UI
+   - 导入进度与结果反馈
 
-- 手动添加课程
-- 从 Excel/CSV 文件导入
-- 支持主流教务系统导出格式
-- 通过 URL Scheme 从其他应用导入
+4. **灵动岛与锁屏组件**
+   - 灵动岛：紧凑型显示课程名称和时间，扩展型增加教室和教师信息
+   - 锁屏小组件：根据尺寸显示不同详细程度的课程信息
 
-### 3. 灵动岛和锁屏组件实现
+## 启动与开发
 
-使用 WidgetKit 和 ActivityKit 框架实现：
-
-- **Live Activities**：显示当前正在进行的课程，包括课程名称、教室、剩余时间等
-- **锁屏小组件**：显示今日课程列表或下一节课信息
-- **灵动岛**：课程开始前通知，课程进行中显示进度
-
-### 4. UI 设计方案
-
-- 遵循 Apple Human Interface Guidelines
-- 支持浅色/深色模式自动切换
-- 采用卡片式设计展示课程信息
-- 使用日历视图和列表视图双模式展示课表
-- 支持自定义主题色和课程颜色标记
-
-## UI 设计建议
-
-1. **主界面**：采用日历+列表的组合视图，顶部为周视图日历，下方为当日课程列表
-2. **课程卡片**：使用圆角矩形卡片，显示课程名称、时间、地点，并用不同颜色区分不同课程
-3. **灵动岛**：紧凑模式显示课程名称和剩余时间，展开模式额外显示教室位置和教师信息
-4. **锁屏组件**：提供多种尺寸的小组件，小尺寸显示下一节课，中尺寸显示当天课程列表
-5. **设置界面**：提供主题设置、通知设置、导入/导出设置等选项
-
-## 开发环境与启动命令
-
-### 开发环境
-
-- Xcode 14.0+
-- iOS 16.0+ SDK
-- Swift 5.7+
-- macOS 12.0+
+### 环境要求
+- macOS Ventura或更高版本
+- Xcode 14或更高版本
+- iOS 16或更高版本的设备/模拟器（支持灵动岛需要iPhone 14 Pro或更新机型）
 
 ### 启动命令
-
-1. 克隆项目到本地：
-   ```bash
-   git clone https://github.com/yourusername/CloudCourse.git
-   ```
-
-2. 打开项目：
-   ```bash
-   cd CloudCourse
-   open CloudCourse.xcodeproj
-   ```
-
-3. 在 Xcode 中选择目标设备并运行
+1. 克隆项目仓库
+2. 使用Xcode打开`CloudCourse.xcodeproj`
+3. 选择目标设备（推荐使用支持灵动岛的真机测试）
+4. 点击运行按钮或使用快捷键`Cmd+R`
 
 ## 后续开发计划
 
-1. 实现基础课表管理功能
-2. 开发课表导入功能
-3. 实现灵动岛和锁屏组件
-4. 添加自定义主题和设置
-5. 优化用户体验和性能
-6. 添加云同步功能（可选）
+1. 基础框架搭建
+2. 数据模型设计与实现
+3. 主应用UI开发
+4. 课表导入功能实现
+5. 小组件开发
+6. 灵动岛集成
+7. 测试与优化
+8. 发布准备
